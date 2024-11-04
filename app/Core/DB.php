@@ -51,9 +51,8 @@ class DB
 
         if ($result !== false) {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -110,6 +109,19 @@ class DB
             Util::arrayToList($values, "?")
         );
         $statement = $dbh->prepare($sql);
-        return $statement->execute(array_values($values));
+
+        if ($statement->execute(array_values($values))) {
+            $sql = sprintf(
+                "SELECT %s FROM %s ORDER BY %s DESC LIMIT 1; ",
+                $model->getPrimaryKeyName(),
+                $model->getTableName(),
+                $model->getPrimaryKeyName()
+            );
+            $result = $this->query($sql);
+            if ($result){
+                return $result[0][$model->getPrimaryKeyName()];
+            }
+        }
+        return false;
     }
 }
